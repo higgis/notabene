@@ -10,11 +10,13 @@ end
 
 class FileParser
   attr_writer :title 
-  attr_reader :title, :html, :filename
+  attr_reader :title, :html, :filename, :output_filename
 
   def initialize(filename)
+    # HACK: can't figure out a way to get the info back from the custom formatter otherwise
     Notabene.current_file_parser = self
     @filename = filename
+    @output_filename = self.filename.gsub('.md', '.html').gsub('.markdown', '.html')  
     @title = "<No title>"
 
     markdown = Redcarpet::Markdown.new(CustomMarkdownFormatter, :autolink => true, :space_after_headers => true)
@@ -22,7 +24,7 @@ class FileParser
   end
 
   def render_to_file
-    File.open("./output/" + self.filename.gsub('md', 'html'), 'w') do |file|  
+    File.open("./output/" + self.output_filename, 'w') do |file|  
       file.puts make_header
       file.puts self.html
       file.puts make_footer
@@ -60,6 +62,23 @@ class NavigationBuilder
       puts "#{e.title} in #{e.filename}"
       
       e.render_to_file
+    end
+
+    File.open("./output/_nav.html", 'w') do |file|  
+      file.puts "<html><body><ul>"
+      
+      @entries.each do |e|
+        file.puts "<li><a href='#{e.output_filename}' target='rhs'>#{e.title}</a></li>"
+      end
+      
+      file.puts "</ul></body></html>"
+    end
+
+    File.open("./output/index.html", "w") do |file|
+      file.puts '<frameset cols="25%,*">'
+      file.puts '<frame src="_nav.html">'
+      file.puts '<frame src="about:blank" id="rhs">'
+      file.puts '</frameset>'
     end
   end
 end
