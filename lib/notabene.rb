@@ -20,6 +20,23 @@ class FileParser
     markdown = Redcarpet::Markdown.new(CustomMarkdownFormatter, :autolink => true, :space_after_headers => true)
     @html = markdown.render(File.read(filename))
   end
+
+  def render_to_file
+    File.open("./output/" + self.filename.gsub('md', 'html'), 'w') do |file|  
+      file.puts make_header
+      file.puts self.html
+      file.puts make_footer
+    end   
+  end
+
+  private
+  def make_header
+    "<html><head><title>#{self.title}</title></head><body>"
+  end
+
+  def make_footer
+    "</body></html>"
+  end
 end
 
 class NavigationBuilder
@@ -42,9 +59,7 @@ class NavigationBuilder
     @entries.each do |e|
       puts "#{e.title} in #{e.filename}"
       
-      File.open(e.filename.gsub('md', 'html'), 'w') do |file|  
-        file.puts e.html
-      end   
+      e.render_to_file
     end
   end
 end
